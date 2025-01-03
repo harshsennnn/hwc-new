@@ -2,27 +2,29 @@ name: Checkstyle
 on: 
   push:
     branches:
-      - "*"        # Trigger on any branch in your repository
+      - "*"        
     paths:
-      - '**/*.java'  # Trigger only for changes in Java files
+      - '**/*.java'  
 
   pull_request:
     branches: ["master", "develop"]
     paths:
-      - '**/*.java'  # Monitor all Java files
+      - '**/*.java'
 
 jobs:
   checkstyle:
     runs-on: ubuntu-latest
-    permissions: # Add permissions for check enforcement
+    permissions:
       contents: read
       pull-requests: write
+      checks: write      # Added for push event status checks
+      statuses: write    # Added for push event status updates
       
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Required to get changed files
+          fetch-depth: 0
         
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -53,9 +55,13 @@ jobs:
             mvn checkstyle:check -Dcheckstyle.includes=$file
           done
 
-      - name: Block PR on Checkstyle Failure
+      - name: Block Merge on Failure
         if: failure()
         uses: actions/github-script@v6
         with:
           script: |
-            core.setFailed('Checkstyle checks failed. Please fix the code formatting issues.')
+            if (context.eventName === 'push') {
+              core.setFailed('Checkstyle checks failed on push. Merging is blocked.');
+            } else {
+              core.setFailed('Checkstyle checks failed. Please fix the code formatting issues.');
+            }
