@@ -1,17 +1,5 @@
-package com.example;
-
-/**
- * Example of properly formatted code.
- */
-public class GoodStyle {
-    
-    private final String message;
-
-    public GoodStyle(String message) {
-        this.message = message;
-    }
-
-    public void printMessage() {
-        System.out.println(message);
-    }
-}
+public class BadStyle{
+    public static void main(String args[]){
+int x=10;
+        String message="This is badly formatted";
+    System.out.println(message);}}
