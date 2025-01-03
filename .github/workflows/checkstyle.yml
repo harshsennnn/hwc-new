@@ -1,10 +1,15 @@
 name: Checkstyle
 on: 
-  
+  push:
+    branches:
+      - "*"        # Trigger on any branch in your repository
+    paths:
+      - '/*.java'  # Trigger only for changes in Java files
+
   pull_request:
     branches: ["master", "develop"]
     paths:
-      - '**/*.java'  # Monitor all Java files
+      - '/*.java'  # Monitor all Java files
 
 jobs:
   checkstyle:
@@ -29,26 +34,28 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v39
         with:
-          files: '**/*.java'
+          files: '/*.java'
           
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven
           
       - name: Install Dependencies
+        run: mvn install -DskipTests
+        
+      - name: Run Checkstyle on Changed Files
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-              mvn clean install -DskipTests
-            
-      - name: Run Checkstyle
-        run: mvn checkstyle:check
-        continue-on-error: false
-  
-      - name: Block Merge on Failure
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            mvn checkstyle:check -Dcheckstyle.includes=$file
+          done
+
+      - name: Block PR on Checkstyle Failure
         if: failure()
         uses: actions/github-script@v6
         with:
-            script: |
-              core.setFailed('Checkstyle checks failed. Please fix code formatting issues.');
+          script: |
+            core.setFailed('Checkstyle checks failed. Please fix the code formatting issues.')
