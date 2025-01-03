@@ -1,6 +1,5 @@
-public class GoodCode {
-    public static void main(String[] args) {
-        int x = 5; // space around operator
-        System.out.println("hello world"); // proper method call
-    }
-}
+public class BadStyle{
+    public static void main(String args[]){
+int x=10;
+        String message="This is badly formatted";
+    System.out.println(message);}}
